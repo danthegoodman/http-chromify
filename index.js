@@ -66,11 +66,12 @@ function parserOnHeaders(headers, url) {
 function parserOnHeadersComplete(info) {
   var parser = this;
   var headers = info.headers;
+  var headerKeys = Object.keys(headers);
   var url = info.url;
 
   if (!headers) {
-    headers = parser._headers;
-    parser._headers = [];
+    headers = {};
+    headerKeys = [];
   }
 
   if (!url) {
@@ -84,16 +85,16 @@ function parserOnHeadersComplete(info) {
   parser.incoming.httpVersion = info.versionMajor + '.' + info.versionMinor;
   parser.incoming.url = url;
 
-  var n = headers.length;
+  var n = headerKeys.length;
 
   // If parser.maxHeaderPairs <= 0 - assume that there're no limit
   if (parser.maxHeaderPairs > 0) {
     n = Math.min(n, parser.maxHeaderPairs);
   }
 
-  for (var i = 0; i < n; i += 2) {
-    var k = headers[i];
-    var v = headers[i + 1];
+  for (var i = 0; i < n; i += 1) {
+    var k = headerKeys[i];
+    var v = headers[k];
     parser.incoming._addHeaderLine(k, v);
   }
 
@@ -163,6 +164,8 @@ function parserOnMessageComplete() {
   }
 }
 
+function parserFinish(){
+}
 
 var parsers = new FreeList('parsers', 1000, function() {
   var parser = new HTTPParser(HTTPParser.REQUEST);
@@ -179,6 +182,7 @@ var parsers = new FreeList('parsers', 1000, function() {
   parser.onHeadersComplete = parserOnHeadersComplete;
   parser.onBody = parserOnBody;
   parser.onMessageComplete = parserOnMessageComplete;
+  parser.finish = parserFinish;
 
   return parser;
 });
